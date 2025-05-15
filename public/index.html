@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omer AI | DreamRender AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@800;900&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #000;
+            color: #fff;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #8b5cf6, #ec4899, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 100;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(45deg, #8b5cf6, #ec4899, #3b82f6);
+        }
+        
+        .glow {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.7);
+        }
+        
+        
+        .demo-box {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="py-6 px-8 flex justify-between items-center">
+        <div class="text-3xl font-black gradient-text">Omer AI</div>
+        <button class="gradient-bg text-white px-6 py-3 rounded-full text-lg font-bold glow">
+            Try Now
+        </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-center px-4">
+        <h1 class="text-6xl md:text-8xl font-black mb-6 text-center">
+            <span class="gradient-text neon-text">DreamRender AI</span>
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-300 mb-12 text-center max-w-2xl">
+            The most powerful <span class="font-bold text-purple-400">text-to-image</span> AI that transforms your <span class="font-bold text-pink-400">words</span> into stunning <span class="font-bold text-blue-400">visuals</span>
+        </p>
+        
+        <!-- Demo Tester -->
+        <div class="demo-box rounded-2xl p-8 w-full max-w-4xl">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Input Section -->
+                <div>
+                    <div class="mb-6">
+                        <label class="block text-xl font-bold text-white mb-3">
+                            <span class="gradient-text">Describe your vision</span>
+                        </label>
+                        <textarea id="prompt" rows="5" class="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="e.g. 'A cyberpunk cityscape with neon lights reflecting in the rain'"></textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-xl font-bold text-white mb-3">
+                            <span class="gradient-text">Style</span>
+                        </label>
+                        <select class="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-white">
+                            <option>Realistic</option>
+                            <option>Fantasy</option>
+                            <option>Cyberpunk</option>
+                            <option>Watercolor</option>
+                            <option>Anime</option>
+                        </select>
+                    </div>
+                    
+                    <button id="generate-btn" class="gradient-bg text-white w-full py-4 rounded-xl text-xl font-bold glow hover:opacity-90 transition">
+                        Generate Image
+                    </button>
+                </div>
+                
+                <!-- Output Section -->
+                <div class="bg-gray-900/50 border-2 border-dashed border-gray-700 rounded-xl h-96 flex items-center justify-center">
+                    <div id="result-image" class="text-center p-8">
+                        <i class="fas fa-image text-5xl text-gray-600 mb-4"></i>
+                        <p class="text-gray-500">Your AI-generated masterpiece will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-8 text-center text-gray-500">
+        <p>© 2023 Omer AI - DreamRender AI. All rights reserved.</p>
+    </footer>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const generateBtn = document.getElementById('generate-btn');
+        const promptInput = document.getElementById('prompt');
+        const styleSelect = document.querySelector('select');
+        const resultImage = document.getElementById('result-image');
+        
+        generateBtn.addEventListener('click', async function() {
+            if (!promptInput.value.trim()) {
+                alert('Please enter a description first!');
+                return;
+            }
+            
+            // Show loading state and disable button
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Rendering...';
+            generateBtn.disabled = true;
+            
+            // Show loading placeholder in result area
+            resultImage.innerHTML = `
+                <div class="text-center p-8">
+                    <i class="fas fa-spinner fa-spin text-5xl text-gray-600 mb-4"></i>
+                    <p class="text-gray-500">Generating your masterpiece...</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: promptInput.value,
+                        style: styleSelect.value
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to generate image');
+                }
+                
+                const data = await response.json();
+                
+                // Create image element to handle load/error events
+                resultImage.innerHTML = `
+                    <div class="relative h-full w-full overflow-hidden rounded-xl">
+                        <img src="${data.imageUrl}" 
+                             alt="Generated image" 
+                             class="w-full h-full object-cover animate-fade-in">
+                    </div>
+                `;
+                
+                const imgElement = resultImage.querySelector('img');
+                
+                // Wait for image to load
+                imgElement.onload = () => {
+                    generateBtn.innerHTML = 'Generate Another';
+                    generateBtn.disabled = false;
+                };
+                
+                // Handle image load failure
+                imgElement.onerror = () => {
+                    resultImage.innerHTML = `
+                        <div class="text-center p-8">
+                            <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-4"></i>
+                            <p class="text-red-500">Failed to load image. Please try again.</p>
+                        </div>
+                    `;
+                    generateBtn.innerHTML = 'Generate Image';
+                    generateBtn.disabled = false;
+                };
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultImage.innerHTML = `
+                    <div class="text-center p-8">
+                        <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-4"></i>
+                        <p class="text-red-500">Failed to generate image. Please try again.</p>
+                    </div>
+                `;
+                generateBtn.innerHTML = 'Generate Image';
+                generateBtn.disabled = false;
+            }
+        });
+    });
+</script>
+</body>
+</html>
